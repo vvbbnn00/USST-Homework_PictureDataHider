@@ -15,7 +15,19 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        ndk.abiFilters.add("armeabi-v7a")
+        ndk.abiFilters.add("arm64-v8a")
+        ndk.abiFilters.add("x86")
+        ndk.abiFilters.add("x86_64")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        externalNativeBuild {
+            cmake {
+                cppFlags.add("-std=c++11")
+                arguments.add("-DANDROID_STL=c++_shared")
+            }
+        }
     }
 
     buildTypes {
@@ -37,6 +49,19 @@ android {
     buildFeatures {
         viewBinding = true
     }
+
+    sourceSets {
+        getByName("main") {
+            jniLibs.setSrcDirs(listOf("src/main/jniLibs"))
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path = File("CMakeLists.txt")
+            version = "3.22.1"
+        }
+    }
+
 }
 
 dependencies {
@@ -60,7 +85,5 @@ dependencies {
     implementation(libs.androidx.camera.extensions)
     implementation(libs.androidx.camera.view)
 
-    // opencv
-    implementation(libs.opencv)
-
+    implementation(project(":opencv"))
 }

@@ -28,10 +28,14 @@ import cn.vvbbnn00.picture_data_hider.databinding.ActivityCameraBinding
 import cn.vvbbnn00.picture_data_hider.utils.AESHelper
 import cn.vvbbnn00.picture_data_hider.utils.FFTWatermarkHelper
 import org.json.JSONObject
+import org.opencv.android.BaseLoaderCallback
+import org.opencv.android.LoaderCallbackInterface
+import org.opencv.android.OpenCVLoader
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+
 
 class CameraActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityCameraBinding
@@ -39,6 +43,20 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var cameraExecutor: ExecutorService
     private var locationService: LocationService? = null
     private var isBound = false
+
+    private val mLoaderCallback: BaseLoaderCallback = object : BaseLoaderCallback(this) {
+        override fun onManagerConnected(status: Int) {
+            when (status) {
+                SUCCESS -> {
+                    Log.i(TAG, "OpenCV loaded successfully")
+                }
+
+                else -> {
+                    super.onManagerConnected(status)
+                }
+            }
+        }
+    }
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
@@ -54,8 +72,21 @@ class CameraActivity : AppCompatActivity() {
         }
     }
 
+    public override fun onResume() {
+        super.onResume()
+        if (!OpenCVLoader.initDebug()) {
+            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization")
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback)
+        } else {
+            Log.d(TAG, "OpenCV library found inside package. Using it!")
+            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS)
+        }
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         viewBinding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(viewBinding.root)
 
@@ -160,18 +191,26 @@ class CameraActivity : AppCompatActivity() {
             )
         }";
 
-        // Get image buffer and add LSB data
+        val newFileName = filePath.split("/").last().split(".")[0] + "_watermark.jpg"
+        val newFilePath = filePath.split("/").dropLast(1).joinToString("/") + "/" + newFileName
+
+        // Get image buffer and add FFT watermark
         val bitmap: Bitmap = BitmapFactory.decodeFile(filePath)
         val mutableBitmap = bitmap.copy(bitmap.config, true)
+        var watermarkedBitmap = mutableBitmap;
 
-        val watermarkedBitmapMat = FFTWatermarkHelper.bitmap2Mat(mutableBitmap);
-        val t1 = FFTWatermarkHelper.antitransformImage(watermarkedBitmapMat);
-        val watermarkedBitmap = FFTWatermarkHelper.mat2Bitmap(t1);
+        try {
+            if (location != null) {
+                watermarkedBitmap = FFTWatermarkHelper.doAddWatermark(mutableBitmap, "${location.latitude}${location.longitude}")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Watermark failed: ${e.message}", e)
+        }
 
         val contentValues = ContentValues().apply {
             put(
                 MediaStore.MediaColumns.DISPLAY_NAME,
-                filePath.split("/").last().split(".")[0] + "_watermark"
+                newFileName
             )
             put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
             if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
@@ -188,20 +227,57 @@ class CameraActivity : AppCompatActivity() {
         }
         os!!.close()
 
+
         // Add exif data
         try {
             // 使用ExifInterface
             val exifInterface = ExifInterface(filePath)
-            exifInterface.setAttribute(
+            val exifInterface2 = ExifInterface(newFilePath)
+
+            // 首先获取原图的全部Exif信息，并复制给新图
+            val attributes = arrayOf(
+                ExifInterface.TAG_APERTURE,
+                ExifInterface.TAG_DATETIME,
+                ExifInterface.TAG_EXPOSURE_TIME,
+                ExifInterface.TAG_FLASH,
+                ExifInterface.TAG_FOCAL_LENGTH,
+                ExifInterface.TAG_GPS_ALTITUDE,
+                ExifInterface.TAG_GPS_ALTITUDE_REF,
+                ExifInterface.TAG_GPS_DATESTAMP,
+                ExifInterface.TAG_GPS_LATITUDE,
+                ExifInterface.TAG_GPS_LATITUDE_REF,
+                ExifInterface.TAG_GPS_LONGITUDE,
+                ExifInterface.TAG_GPS_LONGITUDE_REF,
+                ExifInterface.TAG_GPS_PROCESSING_METHOD,
+                ExifInterface.TAG_GPS_TIMESTAMP,
+                ExifInterface.TAG_IMAGE_LENGTH,
+                ExifInterface.TAG_IMAGE_WIDTH,
+                ExifInterface.TAG_ISO,
+                ExifInterface.TAG_MAKE,
+                ExifInterface.TAG_MODEL,
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.TAG_SUBSEC_TIME,
+                ExifInterface.TAG_WHITE_BALANCE,
+            )
+
+            for (attribute in attributes) {
+                exifInterface2.setAttribute(attribute, exifInterface.getAttribute(attribute))
+            }
+
+            exifInterface2.setAttribute(
                 ExifInterface.TAG_USER_COMMENT,
                 encData
             )
-            exifInterface.saveAttributes()
+            exifInterface2.saveAttributes()
             Log.d(TAG, "Exif data saved.")
         } catch (e: Exception) {
             Log.e(TAG, "Exif data save failed: ${e.message}", e)
         }
 
+
+        // 删除原图
+        val file = java.io.File(filePath)
+        file.delete()
 
         Log.d(TAG, "LSB data saved.")
 

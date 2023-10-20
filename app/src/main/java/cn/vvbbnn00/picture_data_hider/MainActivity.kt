@@ -92,6 +92,11 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, CameraActivity::class.java)
             startActivity(intent)
         }
+
+        findViewById<Button>(R.id.btn_decrypt_photo).setOnClickListener() {
+            val intent = Intent(this, PhotoDecryptionActivity::class.java)
+            startActivity(intent)
+        }
     }
 
 }
