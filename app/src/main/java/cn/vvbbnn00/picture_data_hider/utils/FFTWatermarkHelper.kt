@@ -54,19 +54,55 @@ object FFTWatermarkHelper {
         Core.merge(planes, complexImage)
         // dft
         Core.dft(complexImage, complexImage)
+
         //  添加文本水印
-        val scalar = Scalar(0.0, 0.0, 0.0)
+        val scalarBlack = Scalar(0.0, 0.0, 0.0)
+        val scalarWhite = Scalar(255.0, 255.0, 255.0)
         val point = Point(40.0, 40.0)
+
+        // 为文字添加白色描边
+        val thicknessOutline = 3
+
         Imgproc.putText(
-            complexImage, watermarkText,
-            point, Imgproc.FONT_HERSHEY_DUPLEX, 1.0, scalar
+            complexImage,
+            watermarkText,
+            point,
+            Imgproc.FONT_HERSHEY_DUPLEX,
+            1.0,
+            scalarBlack,
+            thicknessOutline
+        )
+        Imgproc.putText(
+            complexImage,
+            watermarkText,
+            point,
+            Imgproc.FONT_HERSHEY_DUPLEX,
+            1.0,
+            scalarWhite,
+            1
         )
         Core.flip(complexImage, complexImage, -1)
+
         Imgproc.putText(
-            complexImage, watermarkText,
-            point, Imgproc.FONT_HERSHEY_DUPLEX, 1.0, scalar
+            complexImage,
+            watermarkText,
+            point,
+            Imgproc.FONT_HERSHEY_DUPLEX,
+            1.0,
+            scalarBlack,
+            thicknessOutline
+        )
+        Imgproc.putText(
+            complexImage,
+            watermarkText,
+            point,
+            Imgproc.FONT_HERSHEY_DUPLEX,
+            1.0,
+            scalarWhite,
+            1
         )
         Core.flip(complexImage, complexImage, -1)
+
         return antiTransformImage(complexImage)
     }
 

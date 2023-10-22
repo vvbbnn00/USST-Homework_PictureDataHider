@@ -60,7 +60,7 @@ class PhotoDecryptionActivity : AppCompatActivity() {
         setContentView(R.layout.activity_photo_decryption)
 
         findViewById<Button>(R.id.btn_choose_photo).setOnClickListener {
-            // 从相册中选择图片
+            // Select photo
             val intent = Intent(Intent.ACTION_PICK)
             intent.type = "image/jpeg"
             takePictureActivity.launch(intent)
@@ -117,7 +117,7 @@ class PhotoDecryptionActivity : AppCompatActivity() {
         }
 
         try {
-            // 使用ContentResolver获取Bitmap
+            // Get bitmap by uri
             val resolver = contentResolver
             var inputStream = resolver.openInputStream(selectedImageUri)
             if (inputStream != null) {
@@ -126,7 +126,7 @@ class PhotoDecryptionActivity : AppCompatActivity() {
                 Log.e("PhotoDecryptionActivity", "Failed to open input stream")
             }
 
-            // 重置输入流
+            // Reset input stream
             inputStream?.close()
             inputStream = resolver.openInputStream(selectedImageUri)
 
@@ -136,7 +136,7 @@ class PhotoDecryptionActivity : AppCompatActivity() {
             try {
                 decryptedBitmap = FFTWatermarkHelper.doGetWatermark(bitmap)
 
-                // 保存解密后的图片
+                // Save Decrypted watermark
                 val outName =
                     "decrypted_watermark_" + System.currentTimeMillis() + ".jpg"
 
