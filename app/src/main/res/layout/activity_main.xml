@@ -20,16 +20,6 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
-        android:id="@+id/btn_location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="81dp"
-        android:text="Get Location"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@id/textView" />
-
-    <Button
         android:id="@+id/btn_take_photo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -37,7 +27,7 @@
         android:text="Take Photo"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btn_location" />
+        app:layout_constraintTop_toBottomOf="@id/textView" />
 
     <Button
         android:id="@+id/btn_decrypt_photo"
@@ -48,5 +38,15 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btn_take_photo" />
+
+    <Button
+        android:id="@+id/btn_albumn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:text="Albumn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btn_decrypt_photo" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

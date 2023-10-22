@@ -25,8 +25,10 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import cn.vvbbnn00.picture_data_hider.databinding.ActivityCameraBinding
+import cn.vvbbnn00.picture_data_hider.models.Photo
 import cn.vvbbnn00.picture_data_hider.utils.AESHelper
 import cn.vvbbnn00.picture_data_hider.utils.FFTWatermarkHelper
+import cn.vvbbnn00.picture_data_hider.utils.SQLiteHelper
 import org.json.JSONObject
 import org.opencv.android.BaseLoaderCallback
 import org.opencv.android.LoaderCallbackInterface
@@ -150,18 +152,30 @@ class CameraActivity : AppCompatActivity() {
                 override fun
                         onImageSaved(output: ImageCapture.OutputFileResults) {
                     val savedUri = output.savedUri ?: return
-                    addHiddenData(realSavePath, this@CameraActivity)
+                    val hiddenDataPath = addHiddenData(realSavePath, this@CameraActivity)
 
                     val msg = "Photo saved into album."
                     Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, "$savedUri $realSavePath")
+
+                    SQLiteHelper(this@CameraActivity).insert(
+                        Photo(
+                            0,
+                            hiddenDataPath,
+                            System.currentTimeMillis(),
+                            locationService?.getCurrentLocation()?.latitude ?: 0.0,
+                            locationService?.getCurrentLocation()?.longitude ?: 0.0,
+                            0
+                        )
+                    )
+
+                    Log.d(TAG, "$savedUri $hiddenDataPath")
                 }
             }
         )
     }
 
 
-    fun addHiddenData(filePath: String, context: Context) {
+    fun addHiddenData(filePath: String, context: Context): String {
         val aesKey = AESHelper.generateKey()
         val data = JSONObject()
         Log.d(TAG, "AES key: ${AESHelper.bytesToHex(aesKey)}")
@@ -201,7 +215,10 @@ class CameraActivity : AppCompatActivity() {
 
         try {
             if (location != null) {
-                watermarkedBitmap = FFTWatermarkHelper.doAddWatermark(mutableBitmap, "${location.latitude}${location.longitude}")
+                watermarkedBitmap = FFTWatermarkHelper.doAddWatermark(
+                    mutableBitmap,
+                    "${location.latitude}${location.longitude}"
+                )
             }
         } catch (e: Exception) {
             Log.e(TAG, "Watermark failed: ${e.message}", e)
@@ -281,6 +298,7 @@ class CameraActivity : AppCompatActivity() {
 
         Log.d(TAG, "LSB data saved.")
 
+        return newFilePath;
     }
 
     private fun startCamera() {

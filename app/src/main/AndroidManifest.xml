@@ -24,6 +24,14 @@
         android:theme="@style/Theme.PictureDataHider"
         tools:targetApi="31">
         <activity
+            android:name=".ShowPhotoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AlbumActivity"
+            android:exported="false"
+            android:label="@string/title_activity_album"
+            android:theme="@style/Theme.PictureDataHider.NoActionBar" />
+        <activity
             android:name=".PhotoDecryptionActivity"
             android:exported="false" />
         <activity

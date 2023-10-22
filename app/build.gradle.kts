@@ -85,5 +85,9 @@ dependencies {
     implementation(libs.androidx.camera.extensions)
     implementation(libs.androidx.camera.view)
 
+    // OpenCV
     implementation(project(":opencv"))
+
+    // Glide
+    implementation(libs.github.glide)
 }
