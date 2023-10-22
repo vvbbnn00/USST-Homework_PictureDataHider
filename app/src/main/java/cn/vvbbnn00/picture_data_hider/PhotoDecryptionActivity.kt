@@ -5,7 +5,6 @@ import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import androidx.exifinterface.media.ExifInterface
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -14,7 +13,9 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.exifinterface.media.ExifInterface
 import cn.vvbbnn00.picture_data_hider.utils.AESHelper
 import cn.vvbbnn00.picture_data_hider.utils.FFTWatermarkHelper
 import org.opencv.android.BaseLoaderCallback
@@ -22,6 +23,7 @@ import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import java.io.IOException
 import java.io.InputStream
+
 
 class PhotoDecryptionActivity : AppCompatActivity() {
 
@@ -61,7 +63,7 @@ class PhotoDecryptionActivity : AppCompatActivity() {
             // 从相册中选择图片
             val intent = Intent(Intent.ACTION_PICK)
             intent.type = "image/jpeg"
-            startActivityForResult(intent, 1)
+            takePictureActivity.launch(intent)
         }
     }
 
@@ -93,94 +95,107 @@ class PhotoDecryptionActivity : AppCompatActivity() {
 
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
 
-        if (requestCode == 1 && resultCode == RESULT_OK) {
-            if (data != null) {
-                val selectedImageUri = data.data
-                if (selectedImageUri != null) {
+    /**
+     * Register for activity result
+     */
+    private var takePictureActivity = registerForActivityResult(
+        StartActivityForResult()
+    ) {
+        if (it.resultCode != RESULT_OK) {
+            return@registerForActivityResult
+        }
+        if (it.data == null) {
+            Log.d("PhotoDecryptionActivity", "No data returned")
+            return@registerForActivityResult
+        }
 
-                    try {
-                        // 使用ContentResolver获取Bitmap
-                        val resolver = contentResolver
-                        var inputStream = resolver.openInputStream(selectedImageUri)
-                        if (inputStream != null) {
-                            doDecryptionEXIF(inputStream)
-                        } else {
-                            Log.e("PhotoDecryptionActivity", "Failed to open input stream")
-                        }
+        val selectedImageUri = it.data!!.data
+        if (selectedImageUri == null) {
+            Log.d("PhotoDecryptionActivity", "No image selected")
+            return@registerForActivityResult
+        }
 
-                        // 重置输入流
-                        inputStream?.close()
-                        inputStream = resolver.openInputStream(selectedImageUri)
+        try {
+            // 使用ContentResolver获取Bitmap
+            val resolver = contentResolver
+            var inputStream = resolver.openInputStream(selectedImageUri)
+            if (inputStream != null) {
+                doDecryptionEXIF(inputStream)
+            } else {
+                Log.e("PhotoDecryptionActivity", "Failed to open input stream")
+            }
 
-                        val bitmap = BitmapFactory.decodeStream(inputStream)
-                        var decryptedBitmap = bitmap
+            // 重置输入流
+            inputStream?.close()
+            inputStream = resolver.openInputStream(selectedImageUri)
 
-                        try {
-                            decryptedBitmap = FFTWatermarkHelper.doGetWatermark(bitmap)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+            var decryptedBitmap = bitmap
 
-                            // 保存解密后的图片
-                            val outName =
-                                "decrypted_watermark_" + System.currentTimeMillis() + ".jpg"
+            try {
+                decryptedBitmap = FFTWatermarkHelper.doGetWatermark(bitmap)
 
-                            val contentValues = ContentValues().apply {
-                                put(
-                                    MediaStore.MediaColumns.DISPLAY_NAME,
-                                    outName
-                                )
-                                put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
-                                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
-                                    put(
-                                        MediaStore.Images.Media.RELATIVE_PATH,
-                                        "Pictures/PictureDataHider"
-                                    )
-                                }
-                            }
+                // 保存解密后的图片
+                val outName =
+                    "decrypted_watermark_" + System.currentTimeMillis() + ".jpg"
 
-                            val uri = contentResolver.insert(
-                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                                contentValues
-                            )
-
-                            val outputStream = contentResolver.openOutputStream(uri!!)
-                            if (outputStream != null) {
-                                decryptedBitmap.compress(
-                                    Bitmap.CompressFormat.JPEG,
-                                    100,
-                                    outputStream
-                                )
-                            }
-
-                            outputStream?.close()
-
-                            Toast.makeText(
-                                this,
-                                "Decrypted watermark saved into $outName",
-                                Toast.LENGTH_SHORT
-                            )
-                                .show()
-
-                        } catch (e: Exception) {
-                            Toast.makeText(this, "Failed to decrypt watermark", Toast.LENGTH_SHORT)
-                                .show()
-                            Log.e(
-                                "PhotoDecryptionActivity",
-                                "Failed to decrypt watermark, " + e.message
-                            )
-                        }
-
-                        findViewById<ImageView>(R.id.img_result).setImageBitmap(decryptedBitmap)
-
-                        // 记得关闭输入流
-                        inputStream?.close()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
+                val contentValues = ContentValues().apply {
+                    put(
+                        MediaStore.MediaColumns.DISPLAY_NAME,
+                        outName
+                    )
+                    put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                    if (Build.VERSION.SDK_INT > Build.VERSION_CODES.P) {
+                        put(
+                            MediaStore.Images.Media.RELATIVE_PATH,
+                            "Pictures/PictureDataHider"
+                        )
                     }
                 }
+
+                val uri = contentResolver.insert(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    contentValues
+                )
+
+                val outputStream = contentResolver.openOutputStream(uri!!)
+                if (outputStream != null) {
+                    decryptedBitmap.compress(
+                        Bitmap.CompressFormat.JPEG,
+                        100,
+                        outputStream
+                    )
+                }
+
+                outputStream?.close()
+
+                Toast.makeText(
+                    this,
+                    "Decrypted watermark saved into $outName",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+
+            } catch (e: Exception) {
+                Toast.makeText(
+                    this,
+                    "Failed to decrypt watermark",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
+                Log.e(
+                    "PhotoDecryptionActivity",
+                    "Failed to decrypt watermark, " + e.message
+                )
             }
+
+            findViewById<ImageView>(R.id.img_result).setImageBitmap(decryptedBitmap)
+
+            // Close input stream
+            inputStream?.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
     }
-
 }
