@@ -13,8 +13,11 @@ import com.bumptech.glide.Glide
 import java.text.SimpleDateFormat
 
 class ShowPhotoActivity : AppCompatActivity() {
-    private val TAG = "ShowPhotoActivity"
     private var photo: Photo? = null
+
+    companion object {
+        const val TAG = "ShowPhotoActivity"
+    }
 
     @SuppressLint("SimpleDateFormat", "SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,7 +47,7 @@ class ShowPhotoActivity : AppCompatActivity() {
         findViewById<TextView>(R.id.sp_tv_description).text =
             "Latitude: ${photo!!.latitude} Longitude: ${photo!!.longitude}"
 
-        findViewById<Button>(R.id.btn_delete).setOnClickListener() {
+        findViewById<Button>(R.id.btn_delete).setOnClickListener {
             confirmDelete()
         }
     }

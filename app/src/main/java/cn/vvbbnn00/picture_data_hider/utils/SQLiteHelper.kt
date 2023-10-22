@@ -7,20 +7,19 @@ import android.database.sqlite.SQLiteDatabase
 import cn.vvbbnn00.picture_data_hider.models.Photo
 
 class SQLiteHelper(context: Context) {
-    private val SQLITE_FILE = "data.db"
     private var filePath = ""
     private var db: SQLiteDatabase? = null
 
     init {
         val filePath = context.filesDir.path
-        this.filePath = "$filePath/$SQLITE_FILE"
+        this.filePath = "$filePath/${SQLITE_FILE}"
         db = SQLiteDatabase.openOrCreateDatabase(this.filePath, null)
 
         init()
     }
 
     /**
-     * 初始化数据库
+     * Init Database
      */
     private fun init() {
         db!!.execSQL(
@@ -37,7 +36,7 @@ class SQLiteHelper(context: Context) {
 
 
     /**
-     * 插入数据
+     * Insert a photo into database
      */
     fun insert(photo: Photo) {
         val contentValues = ContentValues()
@@ -51,7 +50,7 @@ class SQLiteHelper(context: Context) {
 
 
     /**
-     * 查询一张照片
+     * Query a photo by id
      */
     @SuppressLint("Range")
     fun query(id: Int): Photo? {
@@ -73,7 +72,7 @@ class SQLiteHelper(context: Context) {
     }
 
     /**
-     * 查询所有照片
+     * Query All Photos
      */
     @SuppressLint("Range")
     fun queryAll(type: String = "all"): List<Photo> {
@@ -101,10 +100,14 @@ class SQLiteHelper(context: Context) {
     }
 
     /**
-     * 删除一张照片
+     * Delete a photo by id from sqlite (mention that the photo file will not be deleted)
      */
     fun delete(id: Int) {
         db!!.delete("photos", "id = ?", arrayOf(id.toString()))
+    }
+
+    companion object {
+        private const val SQLITE_FILE = "data.db"
     }
 
 

@@ -40,19 +40,19 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        checkPermission();
+        checkPermission()
 
-        findViewById<Button>(R.id.btn_take_photo).setOnClickListener() {
+        findViewById<Button>(R.id.btn_take_photo).setOnClickListener {
             val intent = Intent(this, CameraActivity::class.java)
             startActivity(intent)
         }
 
-        findViewById<Button>(R.id.btn_decrypt_photo).setOnClickListener() {
+        findViewById<Button>(R.id.btn_decrypt_photo).setOnClickListener {
             val intent = Intent(this, PhotoDecryptionActivity::class.java)
             startActivity(intent)
         }
 
-        findViewById<Button>(R.id.btn_albumn).setOnClickListener() {
+        findViewById<Button>(R.id.btn_albumn).setOnClickListener {
             val intent = Intent(this, AlbumActivity::class.java)
             startActivity(intent)
         }

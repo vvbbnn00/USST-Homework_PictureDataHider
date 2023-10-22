@@ -13,33 +13,45 @@ import java.util.List;
 public class FFTWatermarkHelper {
 
 
-    private static final List<Mat> planes = new ArrayList<Mat>();
-    private static final List<Mat> allPlanes = new ArrayList<Mat>();
+    private static final List<Mat> planes = new ArrayList<>();
+    private static final List<Mat> allPlanes = new ArrayList<>();
 
 
+    /**
+     * Add watermark to bitmap and return
+     * @param bt bitmap
+     * @param waterMark watermark
+     * @return bitmap
+     */
     public static Bitmap doAddWatermark(Bitmap bt, String waterMark) {
         Mat src = new Mat(bt.getHeight(), bt.getWidth(), CvType.CV_8U);
         Utils.bitmapToMat(bt, src);
 
         Mat imageMat = addImageWatermarkWithText(src, waterMark);
-        Bitmap bt3 = null;
-        bt3 = Bitmap.createBitmap(imageMat.cols(), imageMat.rows(), Bitmap.Config.RGB_565);
+        Bitmap bt3 = Bitmap.createBitmap(imageMat.cols(), imageMat.rows(), Bitmap.Config.RGB_565);
         Utils.matToBitmap(imageMat, bt3);
 
         return bt3;
     }
 
+    /**
+     * Get watermark from bitmap and return
+     * @param bt bitmap
+     * @return bitmap
+     */
     public static Bitmap doGetWatermark(Bitmap bt) {
         Mat src = new Mat(bt.getHeight(), bt.getWidth(), CvType.CV_8U);
         Utils.bitmapToMat(bt, src);
 
         Mat imageMat = getImageWatermarkWithText(src);
-        Bitmap bt3 = null;
-        bt3 = Bitmap.createBitmap(imageMat.cols(), imageMat.rows(), Bitmap.Config.RGB_565);
+        Bitmap bt3 = Bitmap.createBitmap(imageMat.cols(), imageMat.rows(), Bitmap.Config.RGB_565);
         Utils.matToBitmap(imageMat, bt3);
 
         return bt3;
     }
+
+
+    // The following code is referenced from https://www.jianshu.com/p/341dc97801ee
 
 
     public static Mat addImageWatermarkWithText(Mat image, String watermarkText) {
@@ -64,11 +76,11 @@ public class FFTWatermarkHelper {
                 point, Imgproc.FONT_HERSHEY_DUPLEX, 1f, scalar);
         Core.flip(complexImage, complexImage, -1);
 
-        return antitransformImage(complexImage);
+        return antiTransformImage(complexImage);
     }
 
     public static Mat getImageWatermarkWithText(Mat image) {
-        List<Mat> planes = new ArrayList<Mat>();
+        List<Mat> planes = new ArrayList<>();
         Mat complexImage = new Mat();
         Mat padded = splitSrc(image);
         padded.convertTo(padded, CvType.CV_32F);
@@ -85,7 +97,7 @@ public class FFTWatermarkHelper {
     private static Mat splitSrc(Mat mat) {
         mat = optimizeImageDim(mat);
         Core.split(mat, allPlanes);
-        Mat padded = new Mat();
+        Mat padded;
         if (allPlanes.size() > 1) {
             padded = allPlanes.get(0);
         } else {
@@ -94,7 +106,7 @@ public class FFTWatermarkHelper {
         return padded;
     }
 
-    private static Mat antitransformImage(Mat complexImage) {
+    private static Mat antiTransformImage(Mat complexImage) {
         Mat invDFT = new Mat();
         Core.idft(complexImage, invDFT, Core.DFT_SCALE | Core.DFT_REAL_OUTPUT, 0);
         Mat restoredImage = new Mat();
@@ -121,7 +133,7 @@ public class FFTWatermarkHelper {
     }
 
     private static Mat createOptimizedMagnitude(Mat complexImage) {
-        List<Mat> newPlanes = new ArrayList<Mat>();
+        List<Mat> newPlanes = new ArrayList<>();
         Mat mag = new Mat();
         Core.split(complexImage, newPlanes);
         Core.magnitude(newPlanes.get(0), newPlanes.get(1), mag);

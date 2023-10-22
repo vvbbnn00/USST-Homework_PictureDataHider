@@ -37,17 +37,13 @@ class LocationService : Service() {
     }
 
     private fun createLocationRequest() {
-        locationRequest = LocationRequest.create().apply {
-            interval = 1000  // 1 second
-            fastestInterval = 500  // 0.5 seconds
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
+        locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000)
+            .build()
     }
 
     private fun createLocationCallback() {
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(p0: LocationResult) {
-                p0 ?: return
                 currentLocation = p0.lastLocation
                 Logger.getLogger("LocationService").info("Location updated: $currentLocation")
             }

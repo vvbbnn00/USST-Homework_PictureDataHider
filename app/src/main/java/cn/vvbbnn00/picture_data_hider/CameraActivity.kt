@@ -9,7 +9,7 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.ExifInterface
+import androidx.exifinterface.media.ExifInterface
 import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
@@ -38,7 +38,9 @@ import java.util.Locale
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-
+/**
+ * the cameraX code is referenced from https://developer.android.com/codelabs/camerax-getting-started#4
+ */
 class CameraActivity : AppCompatActivity() {
     private lateinit var viewBinding: ActivityCameraBinding
     private var imageCapture: ImageCapture? = null
@@ -175,6 +177,9 @@ class CameraActivity : AppCompatActivity() {
     }
 
 
+    /**
+     * Add hidden data to image
+     */
     fun addHiddenData(filePath: String, context: Context): String {
         val aesKey = AESHelper.generateKey()
         val data = JSONObject()
@@ -203,7 +208,7 @@ class CameraActivity : AppCompatActivity() {
                     aesKey
                 )
             )
-        }";
+        }"
 
         val newFileName = filePath.split("/").last().split(".")[0] + "_watermark.jpg"
         val newFilePath = filePath.split("/").dropLast(1).joinToString("/") + "/" + newFileName
@@ -211,7 +216,7 @@ class CameraActivity : AppCompatActivity() {
         // Get image buffer and add FFT watermark
         val bitmap: Bitmap = BitmapFactory.decodeFile(filePath)
         val mutableBitmap = bitmap.copy(bitmap.config, true)
-        var watermarkedBitmap = mutableBitmap;
+        var watermarkedBitmap = mutableBitmap
 
         try {
             if (location != null) {
@@ -239,7 +244,6 @@ class CameraActivity : AppCompatActivity() {
         val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
         val os = resolver.openOutputStream(uri!!)
         if (os != null) {
-            // 不能压缩，否则会丢失数据
             watermarkedBitmap.compress(Bitmap.CompressFormat.JPEG, 100, os)
         }
         os!!.close()
@@ -247,13 +251,11 @@ class CameraActivity : AppCompatActivity() {
 
         // Add exif data
         try {
-            // 使用ExifInterface
             val exifInterface = ExifInterface(filePath)
             val exifInterface2 = ExifInterface(newFilePath)
 
-            // 首先获取原图的全部Exif信息，并复制给新图
+            // Get all EXIF data and copy to new file
             val attributes = arrayOf(
-                ExifInterface.TAG_APERTURE,
                 ExifInterface.TAG_DATETIME,
                 ExifInterface.TAG_EXPOSURE_TIME,
                 ExifInterface.TAG_FLASH,
@@ -269,7 +271,6 @@ class CameraActivity : AppCompatActivity() {
                 ExifInterface.TAG_GPS_TIMESTAMP,
                 ExifInterface.TAG_IMAGE_LENGTH,
                 ExifInterface.TAG_IMAGE_WIDTH,
-                ExifInterface.TAG_ISO,
                 ExifInterface.TAG_MAKE,
                 ExifInterface.TAG_MODEL,
                 ExifInterface.TAG_ORIENTATION,
@@ -292,13 +293,13 @@ class CameraActivity : AppCompatActivity() {
         }
 
 
-        // 删除原图
+        // Delete original file
         val file = java.io.File(filePath)
         file.delete()
 
         Log.d(TAG, "LSB data saved.")
 
-        return newFilePath;
+        return newFilePath
     }
 
     private fun startCamera() {

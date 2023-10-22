@@ -1,12 +1,11 @@
 package cn.vvbbnn00.picture_data_hider
 
-import android.app.Activity
+import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.ExifInterface
-import android.net.Uri
+import androidx.exifinterface.media.ExifInterface
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -23,7 +22,6 @@ import org.opencv.android.LoaderCallbackInterface
 import org.opencv.android.OpenCVLoader
 import java.io.IOException
 import java.io.InputStream
-import java.net.URI
 
 class PhotoDecryptionActivity : AppCompatActivity() {
 
@@ -59,7 +57,7 @@ class PhotoDecryptionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_photo_decryption)
 
-        findViewById<Button>(R.id.btn_choose_photo).setOnClickListener() {
+        findViewById<Button>(R.id.btn_choose_photo).setOnClickListener {
             // 从相册中选择图片
             val intent = Intent(Intent.ACTION_PICK)
             intent.type = "image/jpeg"
@@ -67,6 +65,7 @@ class PhotoDecryptionActivity : AppCompatActivity() {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun doDecryptionEXIF(inputStream: InputStream) {
 
         val exifInterface = ExifInterface(inputStream)

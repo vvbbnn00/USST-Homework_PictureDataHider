@@ -13,7 +13,7 @@ class AESHelper {
          * Generate a key for AES encryption
          */
         fun generateKey(): ByteArray {
-            val key: ByteArray = ByteArray(16)
+            val key = ByteArray(16)
             val random = SecureRandom()
             random.nextBytes(key)
 

@@ -3,13 +3,11 @@ package cn.vvbbnn00.picture_data_hider
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -21,15 +19,14 @@ import java.io.File
 import java.text.SimpleDateFormat
 
 class AlbumActivity : AppCompatActivity() {
-    val TAG = "AlbumActivity"
-    var photos: List<Photo>? = null
+    private var photos: List<Photo>? = null
     var queryType: String = "all"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_album)
-        findViewById<TabLayout>(R.id.tab_select).setOnTabSelectedListener(object :
+        findViewById<TabLayout>(R.id.tab_select).addOnTabSelectedListener(object :
             TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab?) {
                 queryType = tab?.text.toString()
@@ -54,6 +51,9 @@ class AlbumActivity : AppCompatActivity() {
         loadPhotos()
     }
 
+    /**
+     * Load photos from database
+     */
     private fun loadPhotos() {
         photos = SQLiteHelper(this).queryAll(queryType)
         val recyclerView = findViewById<RecyclerView>(R.id.rv_albumn_list)
@@ -83,9 +83,9 @@ class AlbumActivity : AppCompatActivity() {
             val photo = photos[position]
 
             val absolutePath = photo.path
-            // 使用Glide加载图片
+            // Load Photo with Glide
             Glide.with(holder.itemView.context)
-                .load(File(absolutePath)) // Glide可以直接加载File对象
+                .load(File(absolutePath))
                 .into(holder.ivPhoto)
 
             holder.tvTitle.text = SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(photo.timestamp)
